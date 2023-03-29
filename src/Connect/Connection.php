@@ -3,6 +3,10 @@
 namespace SingleStore\Laravel\Connect;
 
 use Illuminate\Database\MySqlConnection;
+use Doctrine\DBAL\Connection as DoctrineConnection;
+use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Doctrine\DBAL\Schema\MySqlSchemaManager;
+use SingleStore\Laravel\Doctrine\SingleStorePlatform;
 use SingleStore\Laravel\Query;
 use SingleStore\Laravel\QueryGrammar;
 use SingleStore\Laravel\Schema;
@@ -55,5 +59,27 @@ class Connection extends MySqlConnection
             $this->getQueryGrammar(),
             $this->getPostProcessor()
         );
+    }
+
+    /**
+     * Get the Doctrine DBAL schema manager for the connection.
+     *
+     * @return \Doctrine\DBAL\Schema\AbstractSchemaManager
+     */
+    public function getDoctrineSchemaManager()
+    {
+        $singleStorePlatform = new SingleStorePlatform();
+
+        return $this->getCustomSchemaManager($this->getDoctrineConnection(), $singleStorePlatform);
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * @return MySqlSchemaManager
+     */
+    public function getCustomSchemaManager(DoctrineConnection $conn, ?AbstractPlatform $platform)
+    {
+        return new MySqlSchemaManager($conn, $platform);
     }
 }
